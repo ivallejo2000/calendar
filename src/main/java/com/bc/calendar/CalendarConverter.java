@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.springframework.stereotype.Component;
 
 import com.bc.calendar.view.WeekView;
 import com.bc.calendar.vo.Calendar;
@@ -16,19 +17,21 @@ import com.vaadin.flow.component.HtmlContainer;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Label;
 
+@Component
 public class CalendarConverter {
 
 	private static String TIME_FORMAT = "%s:00";
 	private static int A_DAY_IN_MILLIS = 86400000;
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/YYYY"); 
     
-	public WeekView fromVoToView(Calendar vo, WeekView view) {
-		WeekView weekView = new WeekView();
+	public List<WeekView> fromVoToView(Calendar vo) {
+		List<WeekView> weekList = new ArrayList<>();
 		
 		for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
 			Set<ImmutablePair<Integer, Integer>> timeRanges = 
 					vo.getScheduleMap().get(dayOfWeek).keySet();	
 			for (ImmutablePair<Integer, Integer> timeRange : timeRanges) {
+				WeekView weekView = new WeekView();
 				String time = String.format(TIME_FORMAT, timeRange.getLeft());
 				weekView.setHour(time);
 				
@@ -50,11 +53,14 @@ public class CalendarConverter {
 						break;
 					case FRIDAY:
 						weekView.setFridayContainer(components);
+						break;
+					default:
 				}
+				weekList.add(weekView);
 			}
 		}
 		
-		return weekView;
+		return weekList;
 	}
 	
 	private static List<HtmlContainer> addComponent(Set<ScheduleTime> scheduleTimes) {

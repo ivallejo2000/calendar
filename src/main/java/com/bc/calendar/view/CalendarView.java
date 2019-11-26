@@ -1,5 +1,9 @@
 package com.bc.calendar.view;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.bc.calendar.CalendarHandler;
+import com.vaadin.flow.component.HtmlContainer;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
@@ -7,6 +11,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
+import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
@@ -16,6 +21,9 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @Theme(value = Lumo.class, variant = Lumo.LIGHT)
 public class CalendarView extends VerticalLayout {
 
+	@Autowired
+	private CalendarHandler calendarHandler;
+	
 	private VerticalLayout mainForm = new VerticalLayout();
 	
 	private DatePicker datePicker = new DatePicker();
@@ -38,6 +46,15 @@ public class CalendarView extends VerticalLayout {
 		
 		setSizeFull();
 		add(mainForm);		
+	}
+	
+	private void fillCalendarData() {
+		weekGrid.setItems(calendarHandler.getWeekItems());
+		weekGrid.addColumn(TemplateRenderer.<WeekView>of(
+				"<div><small>[[item.mondayContainer]]</small></div>")
+				.withProperty("mondayContainer", weekItem -> {
+					return weekItem.getMondayContainer();
+				}));
 	}
 	
     private HorizontalLayout addHorizontalLayoutSettings(String width, String height) {

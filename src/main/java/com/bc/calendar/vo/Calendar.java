@@ -3,6 +3,7 @@ package com.bc.calendar.vo;
 import java.time.DayOfWeek;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -16,6 +17,23 @@ public class Calendar {
 	
 	public void init() {
 		scheduleMap = new ConcurrentHashMap<>();
+		for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
+			if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+				continue;
+			}
+			scheduleMap.put(dayOfWeek, fillTimeRanges());	
+		}
+	}
+	
+	private static Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> fillTimeRanges() {
+		Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> timeRanges
+			= new ConcurrentHashMap<>();
+		
+		for (int time = 9; time < 18; time++) {
+			timeRanges.put(new ImmutablePair<>(time, time + 1), new TreeSet<ScheduleTime>());			
+		}
+
+		return timeRanges;
 	}
 	
 	public Map<DayOfWeek, Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>>> getScheduleMap() {
