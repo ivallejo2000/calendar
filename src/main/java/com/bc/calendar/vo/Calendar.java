@@ -16,6 +16,7 @@ public class Calendar {
 	private Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> timeMap;
 	
 	public void init() {
+		// TODO: Get the calendar from a serialize object if it exist
 		scheduleMap = new ConcurrentHashMap<>();
 		for (DayOfWeek dayOfWeek : DayOfWeek.values()) {
 			if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {

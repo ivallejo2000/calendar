@@ -20,7 +20,7 @@ public class CalendarHandler {
 	
 	@Autowired
 	private CalendarConverter converter;
-		
+	
 	public boolean addDate(LocalDate date, LocalTime time) {
 		DayOfWeek scheduledDay = date.getDayOfWeek();
 		ImmutablePair<Integer, Integer> scheduledTimeRange = 
