@@ -2,7 +2,7 @@ package com.bc.calendar.vo;
 
 import java.time.LocalDate;
 
-public class ScheduleTime {
+public class ScheduleTime implements Comparable<ScheduleTime>{
 
 	private LocalDate date;
 	private boolean editable;
@@ -64,5 +64,10 @@ public class ScheduleTime {
 		} else if (!date.equals(other.date))
 			return false;
 		return true;
+	}
+
+	@Override
+	public int compareTo(ScheduleTime st) {
+		return this.date.compareTo(st.getDate());
 	}
 }

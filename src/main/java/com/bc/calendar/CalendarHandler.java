@@ -7,14 +7,20 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.bc.calendar.view.WeekView;
 import com.bc.calendar.vo.Calendar;
 import com.bc.calendar.vo.ScheduleTime;
 
+@Component
 public class CalendarHandler {
 
+	private static final Logger logger = LoggerFactory.getLogger(CalendarHandler.class);
+			
 	@Autowired
 	private Calendar calendar;
 	
