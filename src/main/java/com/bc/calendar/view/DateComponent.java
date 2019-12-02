@@ -1,11 +1,15 @@
 package com.bc.calendar.view;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import com.vaadin.flow.component.button.Button;
 
 public class DateComponent {
 
 	private Button link;
-	private String dateText;
+	private LocalDate date;
+	private LocalTime time;
 	private String dateParams;
 	private boolean isRemoveAllowed;
 	
@@ -15,14 +19,6 @@ public class DateComponent {
 	
 	public void setLink(Button link) {
 		this.link = link;
-	}
-	
-	public String getDateText() {
-		return dateText;
-	}
-	
-	public void setDateText(String dateText) {
-		this.dateText = dateText;
 	}
 	
 	public String getDateParams() {
@@ -39,5 +35,21 @@ public class DateComponent {
 
 	public void setRemoveAllowed(boolean isRemoveAllowed) {
 		this.isRemoveAllowed = isRemoveAllowed;
+	}
+
+	public LocalDate getDate() {
+		return date;
+	}
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
+
+	public LocalTime getTime() {
+		return time;
+	}
+
+	public void setTime(LocalTime time) {
+		this.time = time;
 	}
 }

@@ -24,9 +24,11 @@ public class CalendarConverter {
 
 	private static final Logger logger = LoggerFactory.getLogger(CalendarConverter.class);
 			
-	private static String TIME_FORMAT = "%s:00";
-	private static int A_DAY_IN_MILLIS = 86400000;
+	private static final String TIME_FORMAT = "%s:00";
+	private static final int A_DAY_IN_MILLIS = 86400000;
+	private static final int THIRTY_SEC_IN_MILLIS = 30000;
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/YYYY"); 
+	private static final String NEW_LINE = System.getProperty("line.separator");
 	
 	public List<WeekView> fromVoToView(Calendar vo) {
 		List<WeekView> weekList = new ArrayList<>();
@@ -72,16 +74,26 @@ public class CalendarConverter {
 	
 	private static List<DateComponent> addComponent(Set<ScheduleTime> scheduleTimes) {
 		List<DateComponent> components = new ArrayList<>();
+		StringBuffer details;
 		for (ScheduleTime scheduleTime : scheduleTimes) {
 			DateComponent dateComponent = new DateComponent();
-			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < A_DAY_IN_MILLIS) {
+			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < THIRTY_SEC_IN_MILLIS) {
 				// If editable then enable remove button
 				dateComponent.setRemoveAllowed(true);				
 			}
 			Button dateLink = new Button(scheduleTime.getDate().format(formatter));
 			dateLink.setText(scheduleTime.getDate().format(formatter));
 
+			dateComponent.setDate(scheduleTime.getDate());
+			dateComponent.setTime(scheduleTime.getTime());
 			dateComponent.setLink(dateLink);
+			details = new StringBuffer();
+			for (String param : scheduleTime.getParams()) {
+				details.append(param);
+				details.append(NEW_LINE);
+			}
+			dateComponent.setDateParams(details.toString());
+			
 			components.add(dateComponent);
 		}
 		

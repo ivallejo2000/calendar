@@ -1,20 +1,27 @@
 package com.bc.calendar.vo;
 
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
-public class ScheduleTime implements Comparable<ScheduleTime>{
+@SuppressWarnings("serial")
+public class ScheduleTime implements Comparable<ScheduleTime>, Serializable {
 
 	private LocalDate date;
+	private LocalTime time;
 	private boolean editable;
 	private long creationTime;
+	private String[] params;
 	
 	public ScheduleTime(LocalDate date) {
 		this.date = date;
 	}
 
-	public ScheduleTime(LocalDate date, long creationTime) {
+	public ScheduleTime(LocalDate date, LocalTime time, String[] params, long creationTime) {
 		this.date = date;
+		this.time = time;
 		this.creationTime = creationTime;
+		this.params = params;
 	}
 
 	public LocalDate getDate() {
@@ -69,5 +76,21 @@ public class ScheduleTime implements Comparable<ScheduleTime>{
 	@Override
 	public int compareTo(ScheduleTime st) {
 		return this.date.compareTo(st.getDate());
+	}
+
+	public String[] getParams() {
+		return params;
+	}
+
+	public void setParams(String[] params) {
+		this.params = params;
+	}
+
+	public LocalTime getTime() {
+		return time;
+	}
+
+	public void setTime(LocalTime time) {
+		this.time = time;
 	}
 }
