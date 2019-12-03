@@ -6,9 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.html.Hr;
@@ -18,7 +17,6 @@ import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.timepicker.TimePicker;
 
 @SuppressWarnings("serial")
 public class MainView extends VerticalLayout {
@@ -26,6 +24,8 @@ public class MainView extends VerticalLayout {
     @Autowired
     protected Environment environment;
     
+    @Value("${calendar.notification.schedule.notes}")
+    protected String emptyNotesNotification;
     @Value("${calendar.notification.schedule.weekend}")
     protected String weekendScheduleNotification;
     @Value("${calendar.notification.schedule.empty}")
@@ -40,6 +40,8 @@ public class MainView extends VerticalLayout {
 	private static final String COLOR = "color";
 	private static final String FONT_WEIGHT = "font-weight";
 	private static final String FONT_SIZE = "font-size";
+	protected static final String MAX_HEIGHT = "max-height";
+	protected static final int MAX_LENGTH_TEXT_FIELD = 200;
 	
     protected void showNotification(String text, NotificationVariant variant) {
     	Notification notification = new Notification(text);
@@ -80,22 +82,7 @@ public class MainView extends VerticalLayout {
     }
     
     @SuppressWarnings("rawtypes")
-	protected <T extends Component> boolean validInput(T component) {
-    	if (component instanceof Select) {
-    		Select select = (Select) component;
-    		return select.getOptionalValue().isPresent();
-    	}
-    	
-    	if (component instanceof DatePicker) {
-    		DatePicker datePicker = (DatePicker) component;
-    		return datePicker.getOptionalValue().isPresent();
-    	}
-    	
-    	if (component instanceof TimePicker) {
-    		TimePicker timePicker = (TimePicker) component;
-    		return timePicker.getOptionalValue().isPresent();
-    	}
-    	
-    	return true;
+	protected <T extends HasValue> boolean validInput(T component) {
+    	return component.getOptionalValue().isPresent();
     }
 }

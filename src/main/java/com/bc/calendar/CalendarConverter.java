@@ -77,13 +77,14 @@ public class CalendarConverter {
 		StringBuffer details;
 		for (ScheduleTime scheduleTime : scheduleTimes) {
 			DateComponent dateComponent = new DateComponent();
-			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < THIRTY_SEC_IN_MILLIS) {
+			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < A_DAY_IN_MILLIS) {
 				// If editable then enable remove button
 				dateComponent.setRemoveAllowed(true);				
 			}
 			Button dateLink = new Button(scheduleTime.getDate().format(formatter));
 			dateLink.setText(scheduleTime.getDate().format(formatter));
 
+			dateComponent.setNotes(scheduleTime.getNotes());
 			dateComponent.setDate(scheduleTime.getDate());
 			dateComponent.setTime(scheduleTime.getTime());
 			dateComponent.setLink(dateLink);

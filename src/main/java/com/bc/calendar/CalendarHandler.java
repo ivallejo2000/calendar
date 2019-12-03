@@ -49,6 +49,16 @@ public class CalendarHandler {
 		return timeAlreadyScheduled.remove(new ScheduleTime(date));
 	}
 
+	public void addNotes(LocalDate date, LocalTime time, String notes) {
+		Set<ScheduleTime> timeAlreadyScheduled = getSchedule(date, time);
+		timeAlreadyScheduled.forEach(scheduleTime -> {
+			ScheduleTime scheduleTimeEdited = new ScheduleTime(date);
+			if (scheduleTime.equals(scheduleTimeEdited)) {
+				scheduleTime.setNotes(notes);
+			}
+		});
+	}
+	
 	private Set<ScheduleTime> getSchedule(LocalDate date, LocalTime time) {
 		DayOfWeek scheduledDay = date.getDayOfWeek();
 		ImmutablePair<Integer, Integer> scheduledTimeRange = 
@@ -60,7 +70,7 @@ public class CalendarHandler {
 		return converter.fromVoToView(calendar);
 	}
 
-	@Scheduled(cron = "0 * * * * ?")
+	@Scheduled(cron = "0 0 8,12,16 * * ?") // Saves calendar at 8am, 12pm and 4pm
 	public void saveCalendar() throws CalendarException {
 
 		try(FileOutputStream calendarFile = 
@@ -68,7 +78,7 @@ public class CalendarHandler {
 					String.format(CALENDAR_DIR_FORMAT, USER_HOME, calendarRoot)));				
 			ObjectOutputStream sessionObject = new ObjectOutputStream(calendarFile);) {
 			sessionObject.writeObject(calendar);
-			logger.info("Calendar saved at {}", LocalDate.now());
+			logger.info("Calendar saved at {}/{}", LocalDate.now(), LocalTime.now());
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new CalendarException("The calendar could not be saved:", e);

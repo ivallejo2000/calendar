@@ -10,6 +10,7 @@ public class DateComponent {
 	private Button link;
 	private LocalDate date;
 	private LocalTime time;
+	private String notes;
 	private String dateParams;
 	private boolean isRemoveAllowed;
 	
@@ -51,5 +52,13 @@ public class DateComponent {
 
 	public void setTime(LocalTime time) {
 		this.time = time;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 }

@@ -11,6 +11,7 @@ public class ScheduleTime implements Comparable<ScheduleTime>, Serializable {
 	private LocalTime time;
 	private boolean editable;
 	private long creationTime;
+	private String notes;
 	private String[] params;
 	
 	public ScheduleTime(LocalDate date) {
@@ -92,5 +93,13 @@ public class ScheduleTime implements Comparable<ScheduleTime>, Serializable {
 
 	public void setTime(LocalTime time) {
 		this.time = time;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 }

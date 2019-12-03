@@ -31,6 +31,8 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextAreaVariant;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -64,6 +66,10 @@ public class CalendarView extends MainView {
 	@Value("${calendar.config.timemax.value}")
 	private String timeMax;	
 	
+	@Value("${calendar.component.button.addnotes}")
+	private String addNotesTitle;
+	@Value("${calendar.component.textarea.notes}")
+	private String notesTitle;
 	@Value("${calendar.component.combo.department}")
 	private String departmentTitle;
 	@Value("${calendar.component.datepicker.schedule}")
@@ -183,7 +189,24 @@ public class CalendarView extends MainView {
 		Dialog details = new Dialog();
 		VerticalLayout detailsLayout = addLayoutSettings(new VerticalLayout(), "100%", "98px");
 		Label paramsLabel = initLabel(new Label(dateDetails.getDateParams()));
-		Button removeButton = new Button(environment.getProperty("calendar.component.button.removedate"));
+		TextArea notes = new TextArea();
+		if (dateDetails.getNotes() != null) {
+			notes.setValue(dateDetails.getNotes());	
+		}
+		notes.addValueChangeListener(event -> notes.setValue(notes.getValue().toUpperCase()));
+		notes.setWidth("300px");
+		notes.addThemeVariants(TextAreaVariant.LUMO_SMALL);
+		notes.setMaxLength(MAX_LENGTH_TEXT_FIELD);
+		notes.getStyle().set(MAX_HEIGHT, "80px");
+		notes.setLabel(notesTitle);
+		
+		HorizontalLayout operationsLayout = addLayoutSettings(new HorizontalLayout(), "100%", "98px");
+		Button addNotesButton = new Button(addNotesTitle);
+		addNotesButton.addThemeVariants(LUMO_SMALL);
+		addNotesButton.setIcon(VaadinIcon.NOTEBOOK.create());
+		addNotesButton.addClickListener(clickEvent -> addNotes(dateDetails, details, notes));
+		
+		Button removeButton = new Button(removeDateTitle);
 		removeButton.addThemeVariants(LUMO_SMALL);
 		removeButton.setIcon(VaadinIcon.TRASH.create());
 		removeButton.addClickListener(clickEvent -> removeDate(dateDetails, details));
@@ -191,9 +214,24 @@ public class CalendarView extends MainView {
 			removeButton.setEnabled(false);
 		}
 
-		detailsLayout.add(paramsLabel, removeButton);
+		operationsLayout.add(removeButton, addNotesButton);
+		detailsLayout.add(paramsLabel, notes, operationsLayout);
+		details.setHeight("200px");
 		details.add(detailsLayout);
 		details.open();
+	}
+	
+	private synchronized void addNotes(DateComponent dateDetails, Dialog details, TextArea notes) {
+		if (!validInput(notes)) {
+			showNotification(emptyNotesNotification, LUMO_ERROR);
+			return;
+		}
+		dateDetails.setNotes(notes.getValue());
+		calendarHandler.addNotes(dateDetails.getDate(), dateDetails.getTime(), notes.getValue());
+		details.close();
+		showNotification(
+				environment.getProperty("calendar.notification.addnotes.success"), LUMO_SUCCESS);
+		return;		
 	}
 	
 	private synchronized void removeDate(DateComponent dateDetails, Dialog details) {
@@ -237,7 +275,7 @@ public class CalendarView extends MainView {
 		return;		
 	}
 	
-	@Scheduled(cron = "0 * * * * ?")
+	@Scheduled(cron = "0 0/5 8-23 * * ?") // Refresh grid every 5 mins from 8am to 7pm 
 	private void refreshWeekGrid() {
 		logger.info("Cron executing");
 		getUI().get().access(() -> weekGrid.setItems(calendarHandler.getWeekItems()));
