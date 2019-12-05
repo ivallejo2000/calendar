@@ -25,8 +25,7 @@ public class CalendarConverter {
 	private static final Logger logger = LoggerFactory.getLogger(CalendarConverter.class);
 			
 	private static final String TIME_FORMAT = "%s:00";
-	private static final int A_DAY_IN_MILLIS = 86400000;
-	private static final int THIRTY_SEC_IN_MILLIS = 30000;
+	private static final int AN_HOUR_IN_MILLIS = 3600000;
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/YYYY"); 
 	private static final String NEW_LINE = System.getProperty("line.separator");
 	
@@ -77,7 +76,7 @@ public class CalendarConverter {
 		StringBuffer details;
 		for (ScheduleTime scheduleTime : scheduleTimes) {
 			DateComponent dateComponent = new DateComponent();
-			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < A_DAY_IN_MILLIS) {
+			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < AN_HOUR_IN_MILLIS) {
 				// If editable then enable remove button
 				dateComponent.setRemoveAllowed(true);				
 			}

@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.bc.calendar.report.CalendarReport;
 import com.bc.calendar.view.WeekView;
 import com.bc.calendar.vo.Calendar;
 import com.bc.calendar.vo.ScheduleTime;
@@ -39,6 +41,9 @@ public class CalendarHandler {
 	@Autowired
 	private CalendarConverter converter;
 	
+	@Autowired
+	private CalendarReport report;
+	
 	public boolean addDate(LocalDate date, LocalTime time, String...params) {
 		Set<ScheduleTime> timeAlreadyScheduled = getSchedule(date, time);		
 		return timeAlreadyScheduled.add(new ScheduleTime(date, time, params, System.currentTimeMillis()));
@@ -49,6 +54,17 @@ public class CalendarHandler {
 		return timeAlreadyScheduled.remove(new ScheduleTime(date));
 	}
 
+	public List<ScheduleTime> getCurrentSchedules(LocalDate date) {
+		List<ScheduleTime> currentSchedules = new ArrayList<>();
+		DayOfWeek scheduledDay = date.getDayOfWeek();
+		calendar.getScheduleMap().get(scheduledDay).values()
+			.stream()
+			.flatMap(Set::stream)
+			.filter(scheduleTime -> date.equals(scheduleTime.getDate()))
+			.forEach(scheduleTime -> currentSchedules.add(scheduleTime));
+		return currentSchedules;
+	} 
+	
 	public void addNotes(LocalDate date, LocalTime time, String notes) {
 		Set<ScheduleTime> timeAlreadyScheduled = getSchedule(date, time);
 		timeAlreadyScheduled.forEach(scheduleTime -> {
@@ -58,14 +74,14 @@ public class CalendarHandler {
 			}
 		});
 	}
-	
+
 	private Set<ScheduleTime> getSchedule(LocalDate date, LocalTime time) {
 		DayOfWeek scheduledDay = date.getDayOfWeek();
 		ImmutablePair<Integer, Integer> scheduledTimeRange = 
 				new ImmutablePair<>(time.getHour(), time.getHour() + 1);
 		return calendar.getScheduleMap().get(scheduledDay).get(scheduledTimeRange);	
 	}
-	
+
 	public List<WeekView> getWeekItems() {
 		return converter.fromVoToView(calendar);
 	}
