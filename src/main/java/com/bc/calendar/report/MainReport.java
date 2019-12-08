@@ -3,9 +3,12 @@ package com.bc.calendar.report;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
@@ -22,14 +25,18 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 public abstract class MainReport<T> extends PdfPageEventHelper {
 
-	protected static final String UTF_8 = "UTF-8";
-	protected static final String ARIAL = "Arial";
-	protected static final Font TITLE_FONT = 
-			FontFactory.getFont(ARIAL, UTF_8, 12, Font.BOLD, BaseColor.BLACK);
+	private static final Logger logger = LoggerFactory
+			.getLogger(MainReport.class);
+					
+	private static final String UTF_8 = "UTF-8";
+	private static final String ARIAL = "Arial";
 	protected static final Font CONTENT_FONT = 
 			FontFactory.getFont(ARIAL, UTF_8, 8, Font.BOLD, BaseColor.BLACK);
-
-	abstract <T extends Serializable> File createDocument(List<T> data) throws ReportException;
+	
+	@Value("${calendar.report.root.directory}")
+	protected String reportRootDirectory;
+	
+	abstract File createDocument(List<T> data) throws ReportException;
 	
 	abstract PdfPTable configTable() throws DocumentException;
 	
@@ -40,6 +47,14 @@ public abstract class MainReport<T> extends PdfPageEventHelper {
         writer.setPageEvent(this);
         return document;
 	} 
+	
+	protected PdfPTable buildReportTitle(String title) throws DocumentException {
+		PdfPTable tableTitle = new PdfPTable(1);
+		tableTitle.setWidthPercentage(100);
+		tableTitle.addCell(buildContentCell(new Phrase(title, CONTENT_FONT), 
+				Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty()));
+		return tableTitle;
+	}
 	
 	protected PdfPCell buildContentCell(Phrase phrase, int align, BaseColor baseColor, 
 			Optional<Integer> border, 

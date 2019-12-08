@@ -4,12 +4,14 @@ import static com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_ERROR;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_SUCCESS;
 
+import java.io.File;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TreeSet;
 
 import javax.annotation.PostConstruct;
@@ -19,13 +21,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.vaadin.olli.FileDownloadWrapper;
 
+import com.bc.calendar.CalendarException;
 import com.bc.calendar.CalendarHandler;
 import com.bc.calendar.util.Department;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -54,10 +59,14 @@ public class CalendarView extends MainView {
 	private DatePicker datePicker = new DatePicker();
 	private TimePicker timePicker = new TimePicker();
 	private Button scheduleButton = new Button();
+	private Button printReportButton = new Button();
 	private Select<String> departmentCombo = new Select<>();
 	private Grid<WeekView> weekGrid = new Grid<>();
 	
 	private static final Locale MX_LOCALE = new Locale("es", "mx");
+	
+	@Value("${calendar.report.file.name}")
+	private String calendarReportFileName;
 	
 	@Value("${calendar.config.datelimit.days}")
 	private int daysLimit;
@@ -66,6 +75,8 @@ public class CalendarView extends MainView {
 	@Value("${calendar.config.timemax.value}")
 	private String timeMax;	
 	
+	@Value("${calendar.component.button.print}")
+	private String printReportTitle;
 	@Value("${calendar.component.button.addnotes}")
 	private String addNotesTitle;
 	@Value("${calendar.component.textarea.notes}")
@@ -102,7 +113,6 @@ public class CalendarView extends MainView {
 		gridLayout.add(weekGrid);
 		
 		mainForm.add(dateLayout);
-		mainForm.add(scheduleButton);
 		mainForm.add(gridLayout);
 		mainForm.setWidthFull();
 		mainForm.setHeight("93%");
@@ -117,7 +127,8 @@ public class CalendarView extends MainView {
 		
 		buildCalendarTemplate();
 		
-		scheduleButton.addClickListener(clickEvent -> scheduleDate());		
+		scheduleButton.addClickListener(clickEvent -> scheduleDate());
+		datePicker.addValueChangeListener(valueChangeEvent -> printScheduleReport());
 	}
 	
 	private void initComponents() {
@@ -137,6 +148,10 @@ public class CalendarView extends MainView {
 		timePicker.setMin(timeMin);
 		timePicker.setMax(timeMax);
 		
+		printReportButton.setText(printReportTitle);
+		printReportButton.addThemeVariants(LUMO_SMALL);
+		printReportButton.setIcon(VaadinIcon.PRINT.create());
+		
 		initCombo(departmentCombo, departmentTitle, new TreeSet<String>(Arrays.asList(Department.array())));
 		
 		weekGrid.getStyle()
@@ -153,7 +168,7 @@ public class CalendarView extends MainView {
 	}
 	
 	private void buildCalendarTemplate() {
-		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "100px"); 
+		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "150px"); 
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getMondayContainer())
 		)), mondayHeader, "220px");
@@ -171,6 +186,9 @@ public class CalendarView extends MainView {
 		)), fridayHeader, "220px");			
 		
 		weekGrid.setItems(calendarHandler.getWeekItems());
+		HeaderRow weekGridHeader = weekGrid.prependHeaderRow();
+		weekGridHeader.getCells().get(0).setComponent(scheduleButton);
+		weekGridHeader.getCells().get(1).setComponent(printReportButton);
 	}
 	
 	private VerticalLayout buildScheduleCell(List<DateComponent> dateItems) {
@@ -248,16 +266,36 @@ public class CalendarView extends MainView {
 		return;			
 	}
 	
-	private synchronized void scheduleDate() {
-		if (!validInput(datePicker) || !validInput(timePicker)) {
-			showNotification(emptyScheduleNotification, LUMO_ERROR);
-			return;
+	private synchronized void printScheduleReport() {
+		
+		try {
+			validateDateInput();
+			
+			Optional<File> report = calendarHandler.buildScheduleReport(datePicker.getValue());
+			if (report.isPresent()) {
+    		    FileDownloadWrapper reportWrapper = 
+    		    		new FileDownloadWrapper(calendarReportFileName, report.get());
+    		    reportWrapper.wrapComponent(printReportButton);
+    		    weekGrid.getHeaderRows().get(0).getCells().get(1).setComponent(reportWrapper);
+				showNotification(
+						environment.getProperty("calendar.notification.print.report.success"), LUMO_SUCCESS);
+				return;
+			}	
+		} catch (CalendarException e) {
+			showNotification(
+					environment.getProperty("calendar.notification.print.report.warning"), LUMO_ERROR);
+			return;			
 		}
+	}
+	
+	private synchronized void scheduleDate() {
+		validateDateInput();
+		
 		if (datePicker.getValue().getDayOfWeek().equals(DayOfWeek.SATURDAY) ||
 				datePicker.getValue().getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
 			showNotification(weekendScheduleNotification, LUMO_ERROR);
 			return;
-		}
+		}		
 		if (!validInput(departmentCombo)) {
     		showNotification(emptyDepartmentNotification, LUMO_ERROR);
     		return;			
@@ -273,6 +311,13 @@ public class CalendarView extends MainView {
 		showNotification(
 				environment.getProperty("calendar.notification.add.date.warning"), LUMO_ERROR);
 		return;		
+	}
+	
+	private void validateDateInput() {
+		if (!validInput(datePicker) || !validInput(timePicker)) {
+			showNotification(emptyScheduleNotification, LUMO_ERROR);
+			return;
+		}		
 	}
 	
 	@Scheduled(cron = "0 0/5 8-23 * * ?") // Refresh grid every 5 mins from 8am to 7pm 

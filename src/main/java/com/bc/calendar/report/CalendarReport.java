@@ -2,18 +2,17 @@ package com.bc.calendar.report;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.time.LocalDate;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.bc.calendar.CalendarHandler;
 import com.bc.calendar.vo.ScheduleTime;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
@@ -36,25 +35,34 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	private String paramsHeader;
 	@Value("${calendar.report.header.notes}")
 	private String notesHeader;
-	
-	@Autowired
-	private CalendarHandler handler;
+	@Value("${calendar.report.file.name}")
+	private String calendarReportFileName;
+	@Value("${calendar.report.file.directory}")
+	private String calendarReportFileDir;
+	@Value("${calendar.report.file.title}")
+	private String calendarReportTitle;
 	
 	private Document document;
 	
 	private File report;
 	
+	private int cols = 3;
+	private float widths[] = {20f, 40f, 40f};
+	
+	@PostConstruct
+	private void initReport() {
+		report = 
+				new File(MessageFormat.format(calendarReportFileDir, 
+						System.getProperty("user.home"), reportRootDirectory, calendarReportFileName));			
+	}
+	
 	@Override
-	<T extends Serializable> File createDocument(List<T> data) throws ReportException {
+	public File createDocument(List<ScheduleTime> currentSchedules) throws ReportException {
 		
 		try {
 			document = buildWriterInstance(report);
 			document.open();
-			
-			int cols = 3;
-			float widths[] = {20f, 40f, 40f};
-			List<ScheduleTime> currentSchedules =
-					handler.getCurrentSchedules(LocalDate.now());
+
 			for (ScheduleTime scheduleTime : currentSchedules) {
 				PdfPTable table = configTable(cols, widths);
 				PdfPCell time = buildContentCell(new Phrase(scheduleTime.getTime().toString(), CONTENT_FONT), 
@@ -67,7 +75,7 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 				table.addCell(time);
 				table.addCell(params);
 				table.addCell(notes);
-				
+
 				document.add(table);
 			}
 		} catch (DocumentException | IOException e) {
@@ -82,7 +90,7 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	
 	@Override
 	public PdfPTable configTable() throws DocumentException {
-		return configTable();
+		return configTable(cols, widths);
 	}
 	
 	private PdfPTable configTable(int cols, float... widths) throws DocumentException {
@@ -96,7 +104,8 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	public void onStartPage(PdfWriter writer, Document document) {	
 		
 		try {
-			addHeaders(timeHeader, paramsHeader, notesHeader);			
+			document.add(buildReportTitle(calendarReportTitle));
+			document.add(addHeaders(timeHeader, paramsHeader, notesHeader));			
 		} catch (DocumentException e) {
 			logger.error("There was an error while building the report headers", e);
 		}

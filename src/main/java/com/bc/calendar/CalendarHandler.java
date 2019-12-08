@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -23,6 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.bc.calendar.report.CalendarReport;
+import com.bc.calendar.report.ReportException;
 import com.bc.calendar.view.WeekView;
 import com.bc.calendar.vo.Calendar;
 import com.bc.calendar.vo.ScheduleTime;
@@ -54,14 +57,33 @@ public class CalendarHandler {
 		return timeAlreadyScheduled.remove(new ScheduleTime(date));
 	}
 
-	public List<ScheduleTime> getCurrentSchedules(LocalDate date) {
+	public Optional<File> buildScheduleReport(LocalDate date) throws CalendarException {
+		List<ScheduleTime> currentSchedules = getCurrentSchedules(date);
+		
+		try {
+			if (currentSchedules.isEmpty()) {
+				return Optional.empty();
+			}
+			return Optional.of(report.createDocument(currentSchedules));	
+		} catch (ReportException e) {
+			e.printStackTrace();
+			throw new CalendarException("The report could not be generated:", e);
+		}
+	}
+
+	private List<ScheduleTime> getCurrentSchedules(LocalDate date) {
 		List<ScheduleTime> currentSchedules = new ArrayList<>();
 		DayOfWeek scheduledDay = date.getDayOfWeek();
-		calendar.getScheduleMap().get(scheduledDay).values()
+		Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> timeRanges = 
+				calendar.getScheduleMap().get(scheduledDay);
+		if (timeRanges != null) {
+			timeRanges.values()
 			.stream()
 			.flatMap(Set::stream)
 			.filter(scheduleTime -> date.equals(scheduleTime.getDate()))
-			.forEach(scheduleTime -> currentSchedules.add(scheduleTime));
+			.forEach(scheduleTime -> currentSchedules.add(scheduleTime));			
+		}
+
 		return currentSchedules;
 	} 
 	
@@ -74,7 +96,7 @@ public class CalendarHandler {
 			}
 		});
 	}
-
+	
 	private Set<ScheduleTime> getSchedule(LocalDate date, LocalTime time) {
 		DayOfWeek scheduledDay = date.getDayOfWeek();
 		ImmutablePair<Integer, Integer> scheduledTimeRange = 

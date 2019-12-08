@@ -101,12 +101,7 @@ public class CalendarConverter {
 	}
 	
 	private static Set<ScheduleTime> removeExpiredDates(Set<ScheduleTime> scheduleTimes) {
-		for (ScheduleTime scheduleTime : scheduleTimes) {
-			if (scheduleTime.getDate().isBefore(LocalDate.now())) {
-				scheduleTimes.remove(scheduleTime);
-			}
-		}
-		
+		scheduleTimes.removeIf(scheduleTime -> scheduleTime.getDate().isBefore(LocalDate.now()));
 		return scheduleTimes;
 	}
 }
