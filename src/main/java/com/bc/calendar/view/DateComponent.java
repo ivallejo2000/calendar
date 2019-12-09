@@ -4,10 +4,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.details.Details;
 
 public class DateComponent {
 
 	private Button link;
+	private Details details;
 	private LocalDate date;
 	private LocalTime time;
 	private String notes;
@@ -60,5 +62,13 @@ public class DateComponent {
 
 	public void setNotes(String notes) {
 		this.notes = notes;
+	}
+
+	public Details getDetails() {
+		return details;
+	}
+
+	public void setDetails(Details details) {
+		this.details = details;
 	}
 }

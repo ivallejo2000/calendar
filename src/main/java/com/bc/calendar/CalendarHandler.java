@@ -13,7 +13,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -57,14 +56,12 @@ public class CalendarHandler {
 		return timeAlreadyScheduled.remove(new ScheduleTime(date));
 	}
 
-	public Optional<File> buildScheduleReport(LocalDate date) throws CalendarException {
+	public File buildScheduleReport(LocalDate date) throws CalendarException {
 		List<ScheduleTime> currentSchedules = getCurrentSchedules(date);
+		report.setReportDate(date);
 		
 		try {
-			if (currentSchedules.isEmpty()) {
-				return Optional.empty();
-			}
-			return Optional.of(report.createDocument(currentSchedules));	
+			return report.createDocument(currentSchedules);	
 		} catch (ReportException e) {
 			e.printStackTrace();
 			throw new CalendarException("The report could not be generated:", e);
@@ -108,7 +105,8 @@ public class CalendarHandler {
 		return converter.fromVoToView(calendar);
 	}
 
-	@Scheduled(cron = "0 0 8,12,16 * * ?") // Saves calendar at 8am, 12pm and 4pm
+	@Scheduled(cron = "0 1 * * * ?")
+	//@Scheduled(cron = "0 0 8,12,16 * * ?") // Saves calendar at 8am, 12pm and 4pm
 	public void saveCalendar() throws CalendarException {
 
 		try(FileOutputStream calendarFile = 

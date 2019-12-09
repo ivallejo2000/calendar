@@ -3,6 +3,7 @@ package com.bc.calendar.report;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,14 +47,17 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	
 	private File report;
 	
+	private LocalDate reportDate;
 	private int cols = 3;
 	private float widths[] = {20f, 40f, 40f};
 	
 	@PostConstruct
 	private void initReport() {
-		report = 
-				new File(MessageFormat.format(calendarReportFileDir, 
-						System.getProperty("user.home"), reportRootDirectory, calendarReportFileName));			
+		report = new File(MessageFormat.format(
+				calendarReportFileDir, 
+				System.getProperty("user.home"), 
+				reportRootDirectory, 
+				calendarReportFileName));			
 	}
 	
 	@Override
@@ -104,11 +108,15 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	public void onStartPage(PdfWriter writer, Document document) {	
 		
 		try {
-			document.add(buildReportTitle(calendarReportTitle));
+			document.add(buildReportTitle(String.format(calendarReportTitle, reportDate)));
 			document.add(addHeaders(timeHeader, paramsHeader, notesHeader));			
 		} catch (DocumentException e) {
 			logger.error("There was an error while building the report headers", e);
 		}
+	}
+
+	public void setReportDate(LocalDate reportDate) {
+		this.reportDate = reportDate;
 	}
 
 }

@@ -11,7 +11,6 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.TreeSet;
 
 import javax.annotation.PostConstruct;
@@ -28,6 +27,8 @@ import com.bc.calendar.CalendarHandler;
 import com.bc.calendar.util.Department;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -168,22 +169,22 @@ public class CalendarView extends MainView {
 	}
 	
 	private void buildCalendarTemplate() {
-		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "150px"); 
+		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "110px"); 
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getMondayContainer())
-		)), mondayHeader, "220px");
+		)), mondayHeader, "230px");
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getTuesdayContainer())
-		)), tuesdayHeader, "220px");	
+		)), tuesdayHeader, "230px");	
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getWednesdayContainer())
-		)), wednesdayHeader, "220px");	
+		)), wednesdayHeader, "230px");	
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getThursdayContainer())
-		)), thursdayHeader, "220px");
+		)), thursdayHeader, "230px");
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getFridayContainer())
-		)), fridayHeader, "220px");			
+		)), fridayHeader, "230px");			
 		
 		weekGrid.setItems(calendarHandler.getWeekItems());
 		HeaderRow weekGridHeader = weekGrid.prependHeaderRow();
@@ -192,15 +193,22 @@ public class CalendarView extends MainView {
 	}
 	
 	private VerticalLayout buildScheduleCell(List<DateComponent> dateItems) {
-		VerticalLayout scheduleLayout = addLayoutSettings(new VerticalLayout(), "80%", "100px");
+		// This layout handles the height of the grid rows
+		VerticalLayout mainScheduleLayout = addLayoutSettings(new VerticalLayout(), "80%", "250px");
 		for (DateComponent dateItem : dateItems) {
+			HorizontalLayout scheduleLayout = addLayoutSettings(new HorizontalLayout(), "80%", "100px");
 			Button dateLink = dateItem.getLink();
 			dateLink.addClickListener(clickEvent -> showScheduleDetails(dateItem));
 			dateLink.addThemeVariants(LUMO_SMALL);
 			dateLink.setIcon(VaadinIcon.CALENDAR_USER.create());
-			scheduleLayout.add(dateLink);
+			
+			Details dateDetails = dateItem.getDetails();
+			dateDetails.setOpened(true);
+			dateDetails.addThemeVariants(DetailsVariant.SMALL);
+			scheduleLayout.add(dateLink, dateDetails);
+			mainScheduleLayout.add(scheduleLayout);
 		}
-		return scheduleLayout;
+		return mainScheduleLayout;
 	}	
 	
 	private void showScheduleDetails(DateComponent dateDetails) {
@@ -246,6 +254,7 @@ public class CalendarView extends MainView {
 		}
 		dateDetails.setNotes(notes.getValue());
 		calendarHandler.addNotes(dateDetails.getDate(), dateDetails.getTime(), notes.getValue());
+		weekGrid.setItems(calendarHandler.getWeekItems());	
 		details.close();
 		showNotification(
 				environment.getProperty("calendar.notification.addnotes.success"), LUMO_SUCCESS);
@@ -271,16 +280,11 @@ public class CalendarView extends MainView {
 		try {
 			validateDateInput();
 			
-			Optional<File> report = calendarHandler.buildScheduleReport(datePicker.getValue());
-			if (report.isPresent()) {
-    		    FileDownloadWrapper reportWrapper = 
-    		    		new FileDownloadWrapper(calendarReportFileName, report.get());
-    		    reportWrapper.wrapComponent(printReportButton);
-    		    weekGrid.getHeaderRows().get(0).getCells().get(1).setComponent(reportWrapper);
-				showNotification(
-						environment.getProperty("calendar.notification.print.report.success"), LUMO_SUCCESS);
-				return;
-			}	
+			File report = calendarHandler.buildScheduleReport(datePicker.getValue());
+		    FileDownloadWrapper reportWrapper = 
+		    		new FileDownloadWrapper(calendarReportFileName, report);
+		    reportWrapper.wrapComponent(printReportButton);
+		    weekGrid.getHeaderRows().get(0).getCells().get(1).setComponent(reportWrapper);
 		} catch (CalendarException e) {
 			showNotification(
 					environment.getProperty("calendar.notification.print.report.warning"), LUMO_ERROR);
@@ -320,7 +324,8 @@ public class CalendarView extends MainView {
 		}		
 	}
 	
-	@Scheduled(cron = "0 0/5 8-23 * * ?") // Refresh grid every 5 mins from 8am to 7pm 
+	@Scheduled(cron = "0 1 * * * ?")
+	//@Scheduled(cron = "0 0/5 8-23 * * ?") // Refresh grid every 5 mins from 8am to 7pm 
 	private void refreshWeekGrid() {
 		logger.info("Cron executing");
 		getUI().get().access(() -> weekGrid.setItems(calendarHandler.getWeekItems()));

@@ -1,5 +1,7 @@
 package com.bc.calendar;
 
+import static com.bc.calendar.util.Constants.NEW_LINE;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,6 +20,9 @@ import com.bc.calendar.view.WeekView;
 import com.bc.calendar.vo.Calendar;
 import com.bc.calendar.vo.ScheduleTime;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextAreaVariant;
 
 @Component
 public class CalendarConverter {
@@ -26,8 +31,7 @@ public class CalendarConverter {
 			
 	private static final String TIME_FORMAT = "%s:00";
 	private static final int AN_HOUR_IN_MILLIS = 3600000;
-	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/YYYY"); 
-	private static final String NEW_LINE = System.getProperty("line.separator");
+	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/YY"); 
 	
 	public List<WeekView> fromVoToView(Calendar vo) {
 		List<WeekView> weekList = new ArrayList<>();
@@ -80,8 +84,13 @@ public class CalendarConverter {
 				// If editable then enable remove button
 				dateComponent.setRemoveAllowed(true);				
 			}
-			Button dateLink = new Button(scheduleTime.getDate().format(formatter));
-			dateLink.setText(scheduleTime.getDate().format(formatter));
+			Button dateLink = new Button();
+			TextArea notes = new TextArea();
+			notes.setValue(scheduleTime.getDetails());
+			notes.setReadOnly(true);
+			notes.setWidth("150px");
+			notes.addThemeVariants(TextAreaVariant.LUMO_SMALL);			
+			notes.getElement().getStyle().set("font-size", "8px");
 
 			dateComponent.setNotes(scheduleTime.getNotes());
 			dateComponent.setDate(scheduleTime.getDate());
@@ -93,6 +102,8 @@ public class CalendarConverter {
 				details.append(NEW_LINE);
 			}
 			dateComponent.setDateParams(details.toString());
+			dateComponent.setDetails(
+					new Details(details.toString() + scheduleTime.getDate().format(formatter), notes));
 			
 			components.add(dateComponent);
 		}

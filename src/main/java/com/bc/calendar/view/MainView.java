@@ -8,6 +8,7 @@ import org.springframework.core.env.Environment;
 
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.html.Hr;
@@ -41,7 +42,7 @@ public class MainView extends VerticalLayout {
 	private static final String FONT_WEIGHT = "font-weight";
 	private static final String FONT_SIZE = "font-size";
 	protected static final String MAX_HEIGHT = "max-height";
-	protected static final int MAX_LENGTH_TEXT_FIELD = 200;
+	protected static final int MAX_LENGTH_TEXT_FIELD = 125;
 	
     protected void showNotification(String text, NotificationVariant variant) {
     	Notification notification = new Notification(text);
@@ -62,6 +63,7 @@ public class MainView extends VerticalLayout {
     		.setHeader(header)
     		.setFlexGrow(0)
     		.setWidth(width)
+    		.setTextAlign(ColumnTextAlign.CENTER)
     		.setFrozen(true);
     	return column;
     }
