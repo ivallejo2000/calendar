@@ -1,6 +1,8 @@
 package com.bc.calendar;
 
 import static com.bc.calendar.util.Constants.CALENDAR_DIR_FORMAT;
+import static com.bc.calendar.util.Constants.EMPTY_DETAILS;
+import static com.bc.calendar.util.Constants.NEW_LINE;
 import static com.bc.calendar.util.Constants.USER_HOME;
 
 import java.io.File;
@@ -90,10 +92,15 @@ public class CalendarHandler {
 			ScheduleTime scheduleTimeEdited = new ScheduleTime(date);
 			if (scheduleTime.equals(scheduleTimeEdited)) {
 				scheduleTime.setNotes(notes);
+				
+				StringBuffer details = new StringBuffer(scheduleTime.getParams()[0]);
+				details.append(NEW_LINE);
+				details.append(scheduleTime.getNotes() != null ? scheduleTime.getNotes() : EMPTY_DETAILS);				
+				scheduleTime.setDetails(details.toString());
 			}
 		});
 	}
-	
+
 	private Set<ScheduleTime> getSchedule(LocalDate date, LocalTime time) {
 		DayOfWeek scheduledDay = date.getDayOfWeek();
 		ImmutablePair<Integer, Integer> scheduledTimeRange = 
@@ -105,8 +112,7 @@ public class CalendarHandler {
 		return converter.fromVoToView(calendar);
 	}
 
-	@Scheduled(cron = "0 1 * * * ?")
-	//@Scheduled(cron = "0 0 8,12,16 * * ?") // Saves calendar at 8am, 12pm and 4pm
+	@Scheduled(cron = "0 0 8,12,16 * * ?") // Saves calendar at 8am, 12pm and 4pm
 	public void saveCalendar() throws CalendarException {
 
 		try(FileOutputStream calendarFile = 

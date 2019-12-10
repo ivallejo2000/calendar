@@ -3,7 +3,8 @@ package com.bc.calendar.util;
 public enum Department {
 	SALES("Ventas"),
 	PRODUCTION("Producción"),
-	LOGISTICS("Logística");
+	LOGISTICS("Logística"),
+	DESIGN("Diseño");
 	
 	private String name;
 	

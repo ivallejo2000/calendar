@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -31,7 +32,12 @@ import com.bc.calendar.CalendarException;
 public class Calendar implements Serializable {
 
 	private static final Logger logger = LoggerFactory.getLogger(Calendar.class);
-			
+
+	@Value("${calendar.config.timemin.value}")
+	private String timeMin;
+	@Value("${calendar.config.timemax.value}")
+	private String timeMax;	
+	
 	@Value("${calendar.config.persistence.root}")
 	private String calendarRoot;
 	
@@ -71,11 +77,13 @@ public class Calendar implements Serializable {
 		}		
 	}
 	
-	private static Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> fillTimeRanges() {
+	private Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> fillTimeRanges() {
 		Map<ImmutablePair<Integer, Integer>, Set<ScheduleTime>> timeRanges
 			= new ConcurrentSkipListMap<>();
 		
-		for (int time = 9; time < 19; time++) {
+		int minHour = LocalTime.parse(timeMin).getHour();
+		int maxHour = LocalTime.parse(timeMax).getHour() + 1;
+		for (int time = minHour; time < maxHour; time++) {
 			timeRanges.put(new ImmutablePair<>(time, time + 1), new TreeSet<ScheduleTime>());			
 		}
 

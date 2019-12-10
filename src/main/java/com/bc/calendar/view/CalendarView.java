@@ -3,6 +3,8 @@ package com.bc.calendar.view;
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_ERROR;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_SUCCESS;
+import static com.bc.calendar.util.Constants.DATE_FORMATTER;
+import static com.bc.calendar.util.Constants.SPACE;
 
 import java.io.File;
 import java.time.DayOfWeek;
@@ -60,6 +62,7 @@ public class CalendarView extends MainView {
 	private DatePicker datePicker = new DatePicker();
 	private TimePicker timePicker = new TimePicker();
 	private Button scheduleButton = new Button();
+	private DatePicker reportDatePicker = new DatePicker();
 	private Button printReportButton = new Button();
 	private Select<String> departmentCombo = new Select<>();
 	private Grid<WeekView> weekGrid = new Grid<>();
@@ -76,6 +79,8 @@ public class CalendarView extends MainView {
 	@Value("${calendar.config.timemax.value}")
 	private String timeMax;	
 	
+	@Value("${calendar.component.reportdatepicker.schedule}")
+	private String scheduleReportDateTitle;
 	@Value("${calendar.component.button.print}")
 	private String printReportTitle;
 	@Value("${calendar.component.button.addnotes}")
@@ -108,7 +113,7 @@ public class CalendarView extends MainView {
 	
 	public CalendarView() {
 		HorizontalLayout dateLayout = addLayoutSettings(new HorizontalLayout(), "100%", "98px");
-		dateLayout.add(datePicker, timePicker, departmentCombo);
+		dateLayout.add(datePicker, timePicker, departmentCombo, scheduleButton);
 		
 		HorizontalLayout gridLayout = addLayoutSettings(new HorizontalLayout(), "100%", "98px");
 		gridLayout.add(weekGrid);
@@ -129,7 +134,7 @@ public class CalendarView extends MainView {
 		buildCalendarTemplate();
 		
 		scheduleButton.addClickListener(clickEvent -> scheduleDate());
-		datePicker.addValueChangeListener(valueChangeEvent -> printScheduleReport());
+		reportDatePicker.addValueChangeListener(valueChangeEvent -> printScheduleReport());
 	}
 	
 	private void initComponents() {
@@ -137,13 +142,9 @@ public class CalendarView extends MainView {
 		scheduleButton.addThemeVariants(LUMO_SMALL);
 		scheduleButton.setIcon(VaadinIcon.CALENDAR_CLOCK.create());
 		
-		LocalDate now = LocalDate.now();
-		datePicker.setValue(now);
-		datePicker.setLabel(scheduleDateTitle);
-		datePicker.setLocale(MX_LOCALE);
-		datePicker.setMin(now);
-		datePicker.setMax(now.plusDays(daysLimit));
-		
+		initDatePicker(datePicker, scheduleDateTitle, true);
+		initDatePicker(reportDatePicker, scheduleReportDateTitle, false);
+
 		timePicker.setLabel(scheduleTimeTitle);
 		timePicker.setLocale(MX_LOCALE);
 		timePicker.setMin(timeMin);
@@ -156,8 +157,19 @@ public class CalendarView extends MainView {
 		initCombo(departmentCombo, departmentTitle, new TreeSet<String>(Arrays.asList(Department.array())));
 		
 		weekGrid.getStyle()
-			.set("height", "480px")
+			.set("height", "520px")
 			.set("font-size", "12px"); 
+	}
+	
+	private void initDatePicker(DatePicker datePicker, String title, boolean initDate) {
+		LocalDate now = LocalDate.now();
+		if (initDate) {
+			datePicker.setValue(now);	
+		}
+		datePicker.setLabel(title);
+		datePicker.setLocale(MX_LOCALE);
+		datePicker.setMin(now);
+		datePicker.setMax(now.plusDays(daysLimit));		
 	}
 	
 	private void clearComponents() {
@@ -169,27 +181,27 @@ public class CalendarView extends MainView {
 	}
 	
 	private void buildCalendarTemplate() {
-		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "110px"); 
+		buildColumn(weekGrid.addColumn(WeekView::getHour), timeHeader, "80px"); 
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getMondayContainer())
-		)), mondayHeader, "230px");
+		)), mondayHeader, "228px");
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getTuesdayContainer())
-		)), tuesdayHeader, "230px");	
+		)), tuesdayHeader, "228px");	
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getWednesdayContainer())
-		)), wednesdayHeader, "230px");	
+		)), wednesdayHeader, "228px");	
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getThursdayContainer())
-		)), thursdayHeader, "230px");
+		)), thursdayHeader, "228px");
 		buildColumn(weekGrid.addColumn(new ComponentRenderer<>(weekItem -> 
 			buildScheduleCell(weekItem.getFridayContainer())
-		)), fridayHeader, "230px");			
+		)), fridayHeader, "228px");			
 		
 		weekGrid.setItems(calendarHandler.getWeekItems());
 		HeaderRow weekGridHeader = weekGrid.prependHeaderRow();
-		weekGridHeader.getCells().get(0).setComponent(scheduleButton);
-		weekGridHeader.getCells().get(1).setComponent(printReportButton);
+		weekGridHeader.getCells().get(1).setComponent(reportDatePicker);
+		weekGridHeader.getCells().get(2).setComponent(printReportButton);
 	}
 	
 	private VerticalLayout buildScheduleCell(List<DateComponent> dateItems) {
@@ -204,6 +216,7 @@ public class CalendarView extends MainView {
 			
 			Details dateDetails = dateItem.getDetails();
 			dateDetails.setOpened(true);
+			dateDetails.setEnabled(false);
 			dateDetails.addThemeVariants(DetailsVariant.SMALL);
 			scheduleLayout.add(dateLink, dateDetails);
 			mainScheduleLayout.add(scheduleLayout);
@@ -215,10 +228,8 @@ public class CalendarView extends MainView {
 		Dialog details = new Dialog();
 		VerticalLayout detailsLayout = addLayoutSettings(new VerticalLayout(), "100%", "98px");
 		Label paramsLabel = initLabel(new Label(dateDetails.getDateParams()));
+		
 		TextArea notes = new TextArea();
-		if (dateDetails.getNotes() != null) {
-			notes.setValue(dateDetails.getNotes());	
-		}
 		notes.addValueChangeListener(event -> notes.setValue(notes.getValue().toUpperCase()));
 		notes.setWidth("300px");
 		notes.addThemeVariants(TextAreaVariant.LUMO_SMALL);
@@ -231,6 +242,11 @@ public class CalendarView extends MainView {
 		addNotesButton.addThemeVariants(LUMO_SMALL);
 		addNotesButton.setIcon(VaadinIcon.NOTEBOOK.create());
 		addNotesButton.addClickListener(clickEvent -> addNotes(dateDetails, details, notes));
+		if (dateDetails.getNotes() != null) {
+			notes.setValue(dateDetails.getNotes());
+			notes.setReadOnly(true);
+			addNotesButton.setEnabled(false); // Disabled if already has notes
+		}
 		
 		Button removeButton = new Button(removeDateTitle);
 		removeButton.addThemeVariants(LUMO_SMALL);
@@ -252,9 +268,9 @@ public class CalendarView extends MainView {
 			showNotification(emptyNotesNotification, LUMO_ERROR);
 			return;
 		}
-		dateDetails.setNotes(notes.getValue());
 		calendarHandler.addNotes(dateDetails.getDate(), dateDetails.getTime(), notes.getValue());
 		weekGrid.setItems(calendarHandler.getWeekItems());	
+		dateDetails.setNotes(notes.getValue());
 		details.close();
 		showNotification(
 				environment.getProperty("calendar.notification.addnotes.success"), LUMO_SUCCESS);
@@ -280,11 +296,12 @@ public class CalendarView extends MainView {
 		try {
 			validateDateInput();
 			
-			File report = calendarHandler.buildScheduleReport(datePicker.getValue());
+			File report = calendarHandler.buildScheduleReport(reportDatePicker.getValue());
 		    FileDownloadWrapper reportWrapper = 
 		    		new FileDownloadWrapper(calendarReportFileName, report);
 		    reportWrapper.wrapComponent(printReportButton);
-		    weekGrid.getHeaderRows().get(0).getCells().get(1).setComponent(reportWrapper);
+		    printReportButton.setText(printReportTitle + SPACE + DATE_FORMATTER.format(reportDatePicker.getValue()));
+		    weekGrid.getHeaderRows().get(0).getCells().get(2).setComponent(reportWrapper);
 		} catch (CalendarException e) {
 			showNotification(
 					environment.getProperty("calendar.notification.print.report.warning"), LUMO_ERROR);
@@ -324,8 +341,7 @@ public class CalendarView extends MainView {
 		}		
 	}
 	
-	@Scheduled(cron = "0 1 * * * ?")
-	//@Scheduled(cron = "0 0/5 8-23 * * ?") // Refresh grid every 5 mins from 8am to 7pm 
+	@Scheduled(cron = "0 0/5 7-20 * * ?") // Refresh grid every 5 mins from 7am to 8pm
 	private void refreshWeekGrid() {
 		logger.info("Cron executing");
 		getUI().get().access(() -> weekGrid.setItems(calendarHandler.getWeekItems()));

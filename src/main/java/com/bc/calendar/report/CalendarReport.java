@@ -49,7 +49,7 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 	
 	private LocalDate reportDate;
 	private int cols = 3;
-	private float widths[] = {20f, 40f, 40f};
+	private float widths[] = {5f, 15f, 80f};
 	
 	@PostConstruct
 	private void initReport() {

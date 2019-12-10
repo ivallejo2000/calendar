@@ -1,7 +1,5 @@
 package com.bc.calendar.vo;
 
-import static com.bc.calendar.util.Constants.NEW_LINE;
-
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -15,6 +13,7 @@ public class ScheduleTime implements Comparable<ScheduleTime>, Serializable {
 	private long creationTime;
 	private String notes;
 	private String[] params;
+	private String details;
 	
 	public ScheduleTime(LocalDate date) {
 		this.date = date;
@@ -106,9 +105,11 @@ public class ScheduleTime implements Comparable<ScheduleTime>, Serializable {
 	}
 
 	public String getDetails() {
-		StringBuffer details = new StringBuffer(this.getParams()[0]);
-		details.append(NEW_LINE);
-		details.append(this.getNotes() != null ? this.getNotes() : "Sin Notas");	
-		return details.toString();
+		return details;
 	}
+
+	public void setDetails(String details) {
+		this.details = details;
+	}
+
 }
