@@ -14,6 +14,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.bc.calendar.view.DateComponent;
@@ -31,7 +32,9 @@ public class CalendarConverter {
 	private static final Logger logger = LoggerFactory.getLogger(CalendarConverter.class);
 			
 	private static final String TIME_FORMAT = "%s:00";
-	private static final int AN_HOUR_IN_MILLIS = 3600000;
+	
+	@Value("${calendar.config.remove.timeoutms}")
+	private int removeScheduleTimeoutMs;
 	
 	public List<WeekView> fromVoToView(Calendar vo) {
 		List<WeekView> weekList = new ArrayList<>();
@@ -75,12 +78,12 @@ public class CalendarConverter {
 		return weekList;
 	}
 	
-	private static List<DateComponent> addComponent(Set<ScheduleTime> scheduleTimes) {
+	private List<DateComponent> addComponent(Set<ScheduleTime> scheduleTimes) {
 		List<DateComponent> components = new ArrayList<>();
 		
 		for (ScheduleTime scheduleTime : scheduleTimes) {
 			DateComponent dateComponent = new DateComponent();
-			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < AN_HOUR_IN_MILLIS) {
+			if (System.currentTimeMillis() - scheduleTime.getCreationTime() < removeScheduleTimeoutMs) {
 				// If editable then enable remove button
 				dateComponent.setRemoveAllowed(true);				
 			}

@@ -1,10 +1,10 @@
 package com.bc.calendar.view;
 
+import static com.bc.calendar.util.Constants.DATE_FORMATTER;
+import static com.bc.calendar.util.Constants.SPACE;
 import static com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_ERROR;
 import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_SUCCESS;
-import static com.bc.calendar.util.Constants.DATE_FORMATTER;
-import static com.bc.calendar.util.Constants.SPACE;
 
 import java.io.File;
 import java.time.DayOfWeek;
