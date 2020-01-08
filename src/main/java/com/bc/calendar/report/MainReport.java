@@ -28,6 +28,8 @@ public abstract class MainReport<T> extends PdfPageEventHelper {
 	private static final Logger logger = LoggerFactory
 			.getLogger(MainReport.class);
 					
+	protected static final float REGULAR_HEIGHT = 20f;
+	protected static final float MAX_HEIGHT = 50f;
 	private static final String UTF_8 = "UTF-8";
 	private static final String ARIAL = "Arial";
 	protected static final Font CONTENT_FONT = 
@@ -52,17 +54,18 @@ public abstract class MainReport<T> extends PdfPageEventHelper {
 		PdfPTable tableTitle = new PdfPTable(1);
 		tableTitle.setWidthPercentage(100);
 		tableTitle.addCell(buildContentCell(new Phrase(title, CONTENT_FONT), 
-				Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty()));
+				Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty(), REGULAR_HEIGHT));
 		return tableTitle;
 	}
 	
 	protected PdfPCell buildContentCell(Phrase phrase, int align, BaseColor baseColor, 
 			Optional<Integer> border, 
-			Optional<Boolean> hasNoBorder) {
+			Optional<Boolean> hasNoBorder,
+			float fixedHeight) {
         PdfPCell cell = new PdfPCell(phrase);
         cell.setHorizontalAlignment(align);
         cell.setBackgroundColor(baseColor);
-        cell.setFixedHeight(12f);
+        cell.setFixedHeight(fixedHeight);
         border.ifPresent(b -> cell.setBorder(b));
         hasNoBorder.ifPresent(unusedValue -> cell.setBorderWidth(0));
         return cell;		
@@ -72,7 +75,7 @@ public abstract class MainReport<T> extends PdfPageEventHelper {
 		PdfPTable headerTable = configTable();
 		for (String header : headers) {
 			headerTable.addCell(buildContentCell(new Phrase(header, CONTENT_FONT), 
-					Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty()));
+					Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty(), REGULAR_HEIGHT));
 		}
 		
 		return headerTable;

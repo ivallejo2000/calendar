@@ -70,11 +70,11 @@ public class CalendarReport extends MainReport<ScheduleTime> {
 			for (ScheduleTime scheduleTime : currentSchedules) {
 				PdfPTable table = configTable(cols, widths);
 				PdfPCell time = buildContentCell(new Phrase(scheduleTime.getTime().toString(), CONTENT_FONT), 
-						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty());			
+						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty(), MAX_HEIGHT);			
 				PdfPCell params = buildContentCell(new Phrase(scheduleTime.getParams()[0], CONTENT_FONT), 
-						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty());	
+						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty(), MAX_HEIGHT);	
 				PdfPCell notes = buildContentCell(new Phrase(scheduleTime.getNotes(), CONTENT_FONT), 
-						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty());
+						Element.ALIGN_CENTER, BaseColor.WHITE, Optional.empty(), Optional.empty(), MAX_HEIGHT);
 				
 				table.addCell(time);
 				table.addCell(params);
