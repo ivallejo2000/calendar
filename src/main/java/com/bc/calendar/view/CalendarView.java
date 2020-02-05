@@ -164,17 +164,19 @@ public class CalendarView extends MainView {
 	private void initDatePicker(DatePicker datePicker, String title, boolean initDate) {
 		LocalDate now = LocalDate.now();
 		if (initDate) {
-			datePicker.setValue(now);	
+			datePicker.setValue(now.plusDays(1));
+			datePicker.setMin(now.plusDays(1));
+		} else {
+			datePicker.setMin(now); // Report date picker current day enabled
 		}
 		datePicker.setLabel(title);
 		datePicker.setLocale(MX_LOCALE);
-		datePicker.setMin(now.plusDays(1));
 		datePicker.setMax(now.plusDays(daysLimit));		
 	}
 	
 	private void clearComponents() {
 		LocalDate now = LocalDate.now();
-		datePicker.setValue(now);
+		datePicker.setValue(now.plusDays(1));
 		timePicker.setValue(LocalTime.parse(timeMin));
 		
 		departmentCombo.clear();
