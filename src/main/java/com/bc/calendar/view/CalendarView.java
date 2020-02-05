@@ -168,7 +168,7 @@ public class CalendarView extends MainView {
 		}
 		datePicker.setLabel(title);
 		datePicker.setLocale(MX_LOCALE);
-		datePicker.setMin(now);
+		datePicker.setMin(now.plusDays(1));
 		datePicker.setMax(now.plusDays(daysLimit));		
 	}
 	
