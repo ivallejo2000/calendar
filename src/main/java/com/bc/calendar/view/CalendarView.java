@@ -9,6 +9,7 @@ import static com.vaadin.flow.component.notification.NotificationVariant.LUMO_SU
 import java.io.File;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
@@ -72,6 +73,10 @@ public class CalendarView extends MainView {
 	@Value("${calendar.report.file.name}")
 	private String calendarReportFileName;
 	
+	@Value("${calendar.config.schedule.max.hour}")
+	private int maxHour;
+	@Value("${calendar.config.schedule.max.minute}")
+	private int maxMinute;	
 	@Value("${calendar.config.datelimit.days}")
 	private int daysLimit;
 	@Value("${calendar.config.timemin.value}")
@@ -164,8 +169,7 @@ public class CalendarView extends MainView {
 	private void initDatePicker(DatePicker datePicker, String title, boolean initDate) {
 		LocalDate now = LocalDate.now();
 		if (initDate) {
-			datePicker.setValue(now.plusDays(1));
-			datePicker.setMin(now.plusDays(1));
+			resetDatePicker();
 		} else {
 			datePicker.setMin(now); // Report date picker current day enabled
 		}
@@ -175,11 +179,25 @@ public class CalendarView extends MainView {
 	}
 	
 	private void clearComponents() {
-		LocalDate now = LocalDate.now();
-		datePicker.setValue(now.plusDays(1));
+		resetDatePicker();
 		timePicker.setValue(LocalTime.parse(timeMin));
 		
 		departmentCombo.clear();
+	}
+	
+	private void resetDatePicker() {
+		LocalDate now = LocalDate.now();
+		// Disable tomorrow depending on the config time value
+		LocalDateTime scheduleTemporalLimit = now.atTime(maxHour, maxMinute);
+		LocalDateTime nowWithTime = now.atTime(LocalTime.now());
+		LocalDate initialResetDate;
+		if (nowWithTime.isAfter(scheduleTemporalLimit)) {
+			initialResetDate = now.plusDays(2);
+		} else {
+			initialResetDate = now.plusDays(1);
+		}
+		datePicker.setValue(initialResetDate);
+		datePicker.setMin(initialResetDate);
 	}
 	
 	private void buildCalendarTemplate() {
@@ -343,9 +361,12 @@ public class CalendarView extends MainView {
 		}		
 	}
 	
-	@Scheduled(cron = "0 0/5 7-20 * * ?") // Refresh grid every 5 mins from 7am to 8pm
+	@Scheduled(cron = "0 0/5 7-20 * * ?") // Refresh grid and date picker every 5 mins from 7am to 8pm
 	private void refreshWeekGrid() {
 		logger.info("Cron executing");
-		getUI().get().access(() -> weekGrid.setItems(calendarHandler.getWeekItems()));
+		getUI().get().access(() -> {
+			weekGrid.setItems(calendarHandler.getWeekItems());
+			resetDatePicker();
+		});
 	}
 }
